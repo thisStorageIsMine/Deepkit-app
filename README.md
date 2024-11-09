@@ -8,10 +8,13 @@
 
 Из корня нужно запустить
 ```bash
+npm install
 npm run start
 
+yarn install
 yarn start
 
+pnpm install
 pnpm start
 ```
 
