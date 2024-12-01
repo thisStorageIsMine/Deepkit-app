@@ -1,38 +1,51 @@
 import { Database } from "@deepkit/orm";
-import * as bcrypt from "bcrypt"
+import * as bcrypt from "bcrypt";
 import { IUser, User } from "../models";
 import { cast } from "@deepkit/type";
 import { HttpError, HttpNotFoundError } from "@deepkit/http";
+import { AuthService } from "./AuthService";
 
 export class UserService {
-    async hashPassword(password: string) {
+    constructor(private authSrvice: AuthService) {}
 
-        const saltRounds = 10;
-        const hashedPass = await bcrypt.hash(password, saltRounds)
+    async isLoginExists(db: Database, login: string) {
+        const isLoginExists =
+            (await db.query(User).filter({ login }).findOneOrUndefined) !== undefined;
 
-        return hashedPass
+        if (isLoginExists) {
+            throw new HttpError(`User with login "${login}" already exists`, 204);
+        }
     }
 
     async addUser(db: Database, data: IUser) {
         const user = cast<User>(data);
-        user.password = await this.hashPassword(user.password)
 
-        await db.persist(user)
+        const login = user.login;
+
+        await this.isLoginExists(db, login);
+
+        user.password = await this.authSrvice.hashPassword(user.password);
+
+        await db.persist(user);
     }
 
     async checkUser(db: Database, data: IUser) {
         const user = await db.query(User).filter({ login: data.login }).findOneOrUndefined();
 
         if (user === undefined) {
-            throw new HttpError("There is no such user", 400)
+            throw new HttpError("Wrong login or password", 401);
         }
 
-        const hashedPassword = user.password
+        const hashedPassword = user.password;
         if (hashedPassword === "") {
-            return true;
+            return user.getUser();
         }
 
-        const isPasswordsEqual = await bcrypt.compare(data.password, hashedPassword)
-        return isPasswordsEqual
+        const isPasswordsEqual = await bcrypt.compare(data.password, hashedPassword);
+
+        if (!isPasswordsEqual) {
+            throw new HttpError("Wrong login or password", 401);
+        }
+        return user.getUser();
     }
 }
