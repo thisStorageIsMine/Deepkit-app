@@ -26,6 +26,7 @@
     "@deepkit/type-compiler": "^1.0.1-alpha.155",
     "@deepkit/workflow": "^1.0.1-alpha.155",
     "bcrypt": "^5.1.1",
+    "jose": "^5.9.6",
     "jsonwebtoken": "^9.0.2",
     "rxjs": "^7.8.1"
   },

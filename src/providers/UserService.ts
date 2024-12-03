@@ -46,6 +46,9 @@ export class UserService {
         if (!isPasswordsEqual) {
             throw new HttpError("Wrong login or password", 401);
         }
-        return user.getUser();
+
+        const userData = user.getUser()
+        const jwt = this.authSrvice.generateJWT(userData)
+        return jwt;
     }
 }
