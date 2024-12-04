@@ -29,7 +29,7 @@ export class UserService {
 
         await db.persist(user);
 
-        // Да я просто вставил сюда запрос на создание в другой таблице. Потому что не нашёл как запускать SQL при миграциях
+        // Да я просто вставил сюда запрос на создание в другой таблице вместо триггера. Потому что не нашёл как запускать SQL при миграциях
         await db.persist(new Note(user, welcomeNote.name, welcomeNote.payload, new Date()));
 
         const { accessJwt, refreshJwt } = await this.authService.generateTokens(user.getUser());
