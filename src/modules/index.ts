@@ -1,2 +1,2 @@
-export * from "./Database";
-export * from "./ServerModule";
+export * from './Database';
+export * from './ServerModule';

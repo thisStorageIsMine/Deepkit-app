@@ -1,54 +1,58 @@
-import { Database } from "@deepkit/orm";
-import * as bcrypt from "bcrypt";
-import { IUser, User } from "../models";
-import { cast } from "@deepkit/type";
-import { HttpError, HttpNotFoundError } from "@deepkit/http";
-import { AuthService } from "./AuthService";
+import { Database } from '@deepkit/orm';
+import * as bcrypt from 'bcrypt';
+import { IUser, User } from '../models';
+import { cast } from '@deepkit/type';
+import { HttpError, HttpInternalServerError, HttpNotFoundError, JSONResponse } from '@deepkit/http';
+import { AuthService } from './AuthService';
 
 export class UserService {
-    constructor(private authSrvice: AuthService) {}
+    constructor(private authService: AuthService) {}
 
     async isLoginExists(db: Database, login: string) {
-        const isLoginExists =
-            (await db.query(User).filter({ login }).findOneOrUndefined) !== undefined;
+        const user = await db.query(User).filter({ login }).findOneOrUndefined();
 
-        if (isLoginExists) {
-            throw new HttpError(`User with login "${login}" already exists`, 204);
-        }
+        return user !== undefined;
     }
 
-    async addUser(db: Database, data: IUser) {
+    async login(db: Database, data: IUser) {
         const user = cast<User>(data);
 
         const login = user.login;
+        const isLoginExists = await this.isLoginExists(db, login);
 
-        await this.isLoginExists(db, login);
+        if (isLoginExists) {
+            throw new HttpError(`User with this login already exists`, 418);
+        }
 
-        user.password = await this.authSrvice.hashPassword(user.password);
+        user.password = await this.authService.hashPassword(user.password);
 
         await db.persist(user);
+        let newUser: User;
+
+        try {
+            newUser = await db.query(User).filter({ login, password: user.password }).findOne();
+        } catch (error) {
+            throw new HttpInternalServerError();
+        }
+
+        const { accessJwt, refreshJwt } = await this.authService.generateTokens(newUser.getUser());
+        return new JSONResponse({ ...user.getUser(), token: { accessJwt, refreshJwt } });
+        1;
     }
 
-    async checkUser(db: Database, data: IUser) {
-        const user = await db.query(User).filter({ login: data.login }).findOneOrUndefined();
-
-        if (user === undefined) {
-            throw new HttpError("Wrong login or password", 401);
-        }
-
-        const hashedPassword = user.password;
-        if (hashedPassword === "") {
-            return user.getUser();
-        }
+    async signup(db: Database, data: User) {
+        const hashedPassword = data.password;
 
         const isPasswordsEqual = await bcrypt.compare(data.password, hashedPassword);
 
         if (!isPasswordsEqual) {
-            throw new HttpError("Wrong login or password", 401);
+            throw new HttpError('Wrong login or password', 401);
         }
 
-        const userData = user.getUser()
-        const jwt = this.authSrvice.generateJWT(userData)
+        const userData = data.getUser();
+        const jwt = this.authService.generateTokens(userData);
         return jwt;
     }
 }
+
+export type x = Pick<User, 'id'>;
