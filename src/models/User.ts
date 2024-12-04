@@ -2,10 +2,11 @@ import { AutoIncrement, PrimaryKey, Unique, entity } from '@deepkit/type';
 
 type TLogin = string & Unique;
 
-@entity.name('user')
+@entity.name('users')
 export class User {
     id: number & PrimaryKey & AutoIncrement = 0;
     role: 'user' | 'admin' = 'user';
+    created_at: Date = new Date();
 
     constructor(
         public login: TLogin,

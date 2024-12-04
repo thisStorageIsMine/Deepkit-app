@@ -5,6 +5,7 @@ import { SQLiteDatabase, ServerModule } from './modules';
 import { Response } from '@deepkit/http';
 import { AuthService, UserService } from './providers';
 import { AuthController } from './controllers';
+import { NoteService } from './providers/NoteService';
 
 const app = new App({
     imports: [
@@ -14,7 +15,7 @@ const app = new App({
         }),
         new ServerModule(),
     ],
-    providers: [SQLiteDatabase, UserService, AuthService],
+    providers: [SQLiteDatabase, UserService, AuthService, NoteService],
 });
 
 app.listen(httpWorkflow.onControllerError, (e) => {

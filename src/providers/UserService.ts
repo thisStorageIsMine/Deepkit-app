@@ -1,9 +1,10 @@
 import { Database } from '@deepkit/orm';
 import * as bcrypt from 'bcrypt';
-import { IUser, User } from '../models';
+import { IUser, Note, User } from '../models';
 import { cast } from '@deepkit/type';
 import { HttpError, HttpInternalServerError, HttpNotFoundError, JSONResponse } from '@deepkit/http';
 import { AuthService } from './AuthService';
+import { welcomeNote } from '../config';
 
 export class UserService {
     constructor(private authService: AuthService) {}
@@ -27,15 +28,11 @@ export class UserService {
         user.password = await this.authService.hashPassword(user.password);
 
         await db.persist(user);
-        let newUser: User;
 
-        try {
-            newUser = await db.query(User).filter({ login, password: user.password }).findOne();
-        } catch (error) {
-            throw new HttpInternalServerError();
-        }
+        // Да я просто вставил сюда запрос на создание в другой таблице. Потому что не нашёл как запускать SQL при миграциях
+        await db.persist(new Note(user, welcomeNote.name, welcomeNote.payload, new Date()));
 
-        const { accessJwt, refreshJwt } = await this.authService.generateTokens(newUser.getUser());
+        const { accessJwt, refreshJwt } = await this.authService.generateTokens(user.getUser());
         return new JSONResponse({ ...user.getUser(), token: { accessJwt, refreshJwt } });
         1;
     }

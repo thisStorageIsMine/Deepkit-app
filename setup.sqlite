@@ -1,0 +1,15 @@
+CREATE TRIGGER say_them_welcome
+AFTER INSERT ON users
+FOR EACH ROW
+BEGIN
+    INSERT INTO notes(name, payload, last_edit, user_id)
+    VALUES ('Добро пожаловать!', '# Привет!
+
+Это система для храния markdown файлов в онлайн формате.
+
+В заметочнице можно
+* создавать списки
+* Делать текст **жирным** или *курсивом*
+
+И много чего ещё! Попробуйте', now(), NEW.id);
+END;
