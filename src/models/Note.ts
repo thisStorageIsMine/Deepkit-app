@@ -5,11 +5,11 @@ import { User } from './User';
 export class Note {
     id: number & PrimaryKey & AutoIncrement = 0;
     created_at: Date = new Date();
+    last_edit: Date = new Date();
 
     constructor(
         public user_id: User & Reference,
         public name: string,
         public payload: string,
-        public last_edit: Date,
     ) {}
 }

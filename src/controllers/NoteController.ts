@@ -1,6 +1,7 @@
 import { HttpBody, http } from '@deepkit/http';
 import { NoteService } from '../providers/NoteService';
 import { Note } from '../models/Note';
+import { User } from '../models';
 
 export class NoteController {
     constructor(private noteService: NoteService) {}
@@ -13,8 +14,17 @@ export class NoteController {
             created_at: createdNote.created_at,
             name: createdNote.name,
             payload: createdNote.payload,
-            last_edit: createdNote.last_edit,
             user_id: createdNote.user_id,
         };
+    }
+
+    @http.POST('note/delete')
+    async deleteNote(id: HttpBody<number>) {
+        return this.noteService.deleteNote(id)
+    }
+
+    @http.POST('note/get-all')
+    async getNotes(user: HttpBody<User>) {
+        return this.noteService.getNotes(user)
     }
 }

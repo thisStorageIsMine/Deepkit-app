@@ -2,24 +2,25 @@ import { Database } from '@deepkit/orm';
 import * as bcrypt from 'bcrypt';
 import { IUser, Note, User } from '../models';
 import { cast } from '@deepkit/type';
-import { HttpError, HttpInternalServerError, HttpNotFoundError, JSONResponse } from '@deepkit/http';
+import { HttpError, HttpInternalServerError, HttpNotFoundError, HttpUnauthorizedError, JSONResponse } from '@deepkit/http';
 import { AuthService } from './AuthService';
 import { welcomeNote } from '../config';
+import { SQLiteDatabase } from '../modules';
 
 export class UserService {
-    constructor(private authService: AuthService) {}
+    constructor(private authService: AuthService, private db: SQLiteDatabase) {}
 
-    async isLoginExists(db: Database, login: string) {
-        const user = await db.query(User).filter({ login }).findOneOrUndefined();
+    async isLoginExists(login: string) {
+        const user = await this.db.query(User).filter({ login }).findOneOrUndefined();
 
         return user !== undefined;
     }
 
-    async login(db: Database, data: IUser) {
+    async signUp( data: IUser) {
         const user = cast<User>(data);
 
         const login = user.login;
-        const isLoginExists = await this.isLoginExists(db, login);
+        const isLoginExists = await this.isLoginExists(login);
 
         if (isLoginExists) {
             throw new HttpError(`User with this login already exists`, 418);
@@ -27,28 +28,40 @@ export class UserService {
 
         user.password = await this.authService.hashPassword(user.password);
 
-        await db.persist(user);
+        await this.db.persist(user);
 
         // Да я просто вставил сюда запрос на создание в другой таблице вместо триггера. Потому что не нашёл как запускать SQL при миграциях
-        await db.persist(new Note(user, welcomeNote.name, welcomeNote.payload, new Date()));
+        await this.db.persist(new Note(user, welcomeNote.name, welcomeNote.payload));
 
         const { accessJwt, refreshJwt } = await this.authService.generateTokens(user.getUser());
+        
+        this.db.query(User).filter({id: user.id}).patchOne({refresh_token: refreshJwt})
+
         return new JSONResponse({ ...user.getUser(), token: { accessJwt, refreshJwt } });
         1;
     }
 
-    async signup(db: Database, data: User) {
-        const hashedPassword = data.password;
+    async login(login: string, password: string) {
+        const user = await this.db.query(User).filter({login}).findOneOrUndefined()
 
-        const isPasswordsEqual = await bcrypt.compare(data.password, hashedPassword);
-
-        if (!isPasswordsEqual) {
-            throw new HttpError('Wrong login or password', 401);
+        if(!user) {
+            throw new HttpUnauthorizedError()
         }
 
-        const userData = data.getUser();
-        const jwt = this.authService.generateTokens(userData);
-        return jwt;
+        const isPasswordsEqual = await bcrypt.compare(user.password, password);
+
+        if (!isPasswordsEqual) {
+            throw new HttpUnauthorizedError()
+        }
+
+        const { accessJwt, refreshJwt } = await  this.authService.generateTokens({
+            id: user.id,
+            login,
+            password
+        });
+
+        this.db.query(User).filter({id: user.id}).patchOne({refresh_token: refreshJwt})
+        return { accessJwt, refreshJwt };
     }
 }
 

@@ -11,6 +11,7 @@ export class User {
     constructor(
         public login: TLogin,
         public password: string,
+        public refresh_token?: string
     ) {}
 
     getUser() {

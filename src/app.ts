@@ -1,11 +1,12 @@
 import { App } from '@deepkit/app';
 import { FrameworkModule } from '@deepkit/framework';
-import { HttpError, http, httpWorkflow } from '@deepkit/http';
+import { HttpError, http, httpMiddleware, httpWorkflow } from '@deepkit/http';
 import { SQLiteDatabase, ServerModule } from './modules';
 import { Response } from '@deepkit/http';
 import { AuthService, UserService } from './providers';
 import { AuthController } from './controllers';
 import { NoteService } from './providers/NoteService';
+import { AuthMiddleware } from './middlewares';
 
 const app = new App({
     imports: [
@@ -15,7 +16,10 @@ const app = new App({
         }),
         new ServerModule(),
     ],
-    providers: [SQLiteDatabase, UserService, AuthService, NoteService],
+    middlewares: [
+        httpMiddleware.for(AuthMiddleware).excludeRouteNames("login", 'signup')
+    ],
+    providers: [SQLiteDatabase, UserService, AuthService, NoteService, AuthMiddleware],
 });
 
 app.listen(httpWorkflow.onControllerError, (e) => {

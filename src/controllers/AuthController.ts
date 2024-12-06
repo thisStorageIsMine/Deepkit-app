@@ -16,16 +16,16 @@ export class AuthController {
     //     return 'Пользователь добавлен';
     // }
 
-    @http.POST('/login')
-    async logIn(body: HttpBody<IUser>) {
+    @http.POST('/signup')
+    async signUp(body: HttpBody<IUser>) {
         console.log('Тук тук!');
-        return await this.userService.login(this.database, body);
+        return await this.userService.signUp(body);
     }
 
     @http.GET('/is-login-exists')
     async checkIsLoginExists(login: HttpQuery<string>) {
         try {
-            const ok = this.userService.isLoginExists(this.database, login);
+            const ok = this.userService.isLoginExists(login);
         } catch (error) {
             throw new HttpError(`Login: "${login}" does not exists`, 204);
         }

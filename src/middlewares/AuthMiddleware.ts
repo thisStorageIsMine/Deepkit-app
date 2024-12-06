@@ -20,7 +20,7 @@ const getJwtFromCookie = (cookies: string | undefined) => {
         throw new Error('Unauthorized');
     }
 
-    const splittedCookies = cookies.split(' ').map((cookie) => cookie.split('='));
+    const splittedCookies = cookies.split('; ').map((cookie) => cookie.split('='));
     const auth = splittedCookies.find((cookie) => cookie[0] === 'Authorization');
 
     if (!auth) {
