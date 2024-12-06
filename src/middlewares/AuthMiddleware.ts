@@ -4,28 +4,24 @@ import { accessSecretJwt } from '../config';
 
 export class AuthMiddleware implements HttpMiddleware {
     async execute(req: HttpRequest, res: HttpResponse, next: (err?: any) => void) {
-        try {
-            const jwt = getJwtFromCookie(req.headers.cookie);
-            await jwtVerify(jwt, accessSecretJwt);
+        const jwt = getDataFromCookies(req.headers.cookie, 'Authorization');
+        await jwtVerify(jwt, accessSecretJwt);
 
-            next();
-        } catch {
-            throw new HttpUnauthorizedError();
-        }
+        next();
     }
 }
 
-const getJwtFromCookie = (cookies: string | undefined) => {
+export const getDataFromCookies = (cookies: string | undefined, cookieName: string) => {
     if (!cookies) {
-        throw new Error('Unauthorized');
+        throw new HttpUnauthorizedError();
     }
 
     const splittedCookies = cookies.split('; ').map((cookie) => cookie.split('='));
-    const auth = splittedCookies.find((cookie) => cookie[0] === 'Authorization');
+    const neededCookie = splittedCookies.find((cookie) => cookie[0] === cookieName);
 
-    if (!auth) {
-        throw new Error('Unauthorized');
+    if (!neededCookie) {
+        throw new HttpUnauthorizedError();
     }
 
-    return auth[1];
+    return neededCookie[1];
 };

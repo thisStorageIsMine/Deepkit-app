@@ -1,25 +1,20 @@
-import { HttpBody, HttpError, HttpQuery, http } from '@deepkit/http';
+import { HttpBody, HttpError, HttpQuery, HttpRequest, HttpResponse, http } from '@deepkit/http';
 import { SQLiteDatabase } from '../modules';
 import { IUser, User } from '../models';
-import { UserService } from '../providers';
+import { AuthService, UserService } from '../providers';
+import { getDataFromCookies } from '../middlewares';
 
 export class AuthController {
     constructor(
         private database: SQLiteDatabase,
         private userService: UserService,
+        private authService: AuthService,
     ) {}
 
-    // @http.POST('/signup')
-    // async signUp(body: HttpBody<User>) {
-    //     await this.userService.addUser(this.database, body);
-
-    //     return 'Пользователь добавлен';
-    // }
-
-    @http.POST('/signup')
+    @(http.POST('/signup').name('signup'))
     async signUp(body: HttpBody<IUser>) {
-        console.log('Тук тук!');
-        return await this.userService.signUp(body);
+        const newUser = await this.userService.signUp(body);
+        return newUser;
     }
 
     @http.GET('/is-login-exists')
@@ -29,6 +24,18 @@ export class AuthController {
         } catch (error) {
             throw new HttpError(`Login: "${login}" does not exists`, 204);
         }
+    }
+
+    @(http.POST('/login').name('login'))
+    async login(candidat: HttpBody<User>) {
+        return await this.userService.login(candidat.login, candidat.password);
+    }
+
+    @(http.POST('/jwt/refresh').name('jwt/refresh'))
+    async refreshJwt(candidate: HttpBody<User>, req: HttpRequest) {
+        const refreshToken = getDataFromCookies(req.headers.cookie, 'refreshToken');
+
+        const newTokens = await this.authService.refreshJwt(candidate, refreshToken);
     }
 
     @http.GET('/ping')

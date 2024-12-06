@@ -16,9 +16,7 @@ const app = new App({
         }),
         new ServerModule(),
     ],
-    middlewares: [
-        httpMiddleware.for(AuthMiddleware).excludeRouteNames("login", 'signup')
-    ],
+    middlewares: [httpMiddleware.for(AuthMiddleware).forRouteNames('jwt/refresh')],
     providers: [SQLiteDatabase, UserService, AuthService, NoteService, AuthMiddleware],
 });
 
