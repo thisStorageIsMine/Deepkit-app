@@ -11,13 +11,13 @@ export class AuthController {
         private authService: AuthService,
     ) {}
 
-    @(http.POST('/signup').name('signup'))
+    @(http.POST('/auth/signup').name('signup'))
     async signUp(body: HttpBody<IUser>) {
         const newUser = await this.userService.signUp(body);
         return newUser;
     }
 
-    @http.GET('/is-login-exists')
+    @http.GET('/auth/is-login-exists')
     async checkIsLoginExists(login: HttpQuery<string>) {
         try {
             const ok = this.userService.isLoginExists(login);
@@ -26,12 +26,12 @@ export class AuthController {
         }
     }
 
-    @(http.POST('/login').name('login'))
+    @(http.POST('/auth/login').name('login'))
     async login(candidat: HttpBody<User>) {
         return await this.userService.login(candidat.login, candidat.password);
     }
 
-    @(http.POST('/jwt/refresh').name('jwt/refresh'))
+    @(http.POST('/auth/refresh').name('jwt/refresh'))
     async refreshJwt(candidate: HttpBody<User>, req: HttpRequest) {
         const refreshToken = getDataFromCookies(req.headers.cookie, 'refreshToken');
 

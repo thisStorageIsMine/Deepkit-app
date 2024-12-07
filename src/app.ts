@@ -16,7 +16,11 @@ const app = new App({
         }),
         new ServerModule(),
     ],
-    middlewares: [httpMiddleware.for(AuthMiddleware).forRouteNames('jwt/refresh')],
+    middlewares: [
+        httpMiddleware.for(AuthMiddleware).forRoutes({
+            group: 'notes',
+        }),
+    ],
     providers: [SQLiteDatabase, UserService, AuthService, NoteService, AuthMiddleware],
 });
 

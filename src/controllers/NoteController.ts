@@ -6,7 +6,7 @@ import { User } from '../models';
 export class NoteController {
     constructor(private noteService: NoteService) {}
 
-    @http.POST('note/add')
+    @(http.POST('note/add').group('notes'))
     async addNote(note: HttpBody<Note>) {
         const createdNote = await this.noteService.insertNote(note);
         return {
@@ -18,13 +18,13 @@ export class NoteController {
         };
     }
 
-    @http.POST('note/delete')
+    @(http.POST('note/delete').group('notes'))
     async deleteNote(id: HttpBody<number>) {
-        return this.noteService.deleteNote(id)
+        return this.noteService.deleteNote(id);
     }
 
-    @http.POST('note/get-all')
+    @(http.POST('note/get').group('notes'))
     async getNotes(user: HttpBody<User>) {
-        return this.noteService.getNotes(user)
+        return await this.noteService.getNotes(user);
     }
 }

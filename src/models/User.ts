@@ -1,4 +1,7 @@
+import { Database } from '@deepkit/orm';
 import { AutoIncrement, PrimaryKey, Unique, entity } from '@deepkit/type';
+import { Note } from './Note';
+import { wrap } from '../utils';
 
 type TLogin = string & Unique;
 
@@ -11,7 +14,7 @@ export class User {
     constructor(
         public login: TLogin,
         public password: string,
-        public refresh_token?: string
+        public refresh_token?: string,
     ) {}
 
     getUser() {
