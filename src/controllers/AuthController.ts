@@ -19,11 +19,7 @@ export class AuthController {
 
     @http.GET('/auth/is-login-exists')
     async checkIsLoginExists(login: HttpQuery<string>) {
-        try {
-            const ok = this.userService.isLoginExists(login);
-        } catch (error) {
-            throw new HttpError(`Login: "${login}" does not exists`, 204);
-        }
+        return { is_exists: await this.userService.isLoginExists(login) };
     }
 
     @(http.POST('/auth/login').name('login'))
@@ -35,7 +31,7 @@ export class AuthController {
     async refreshJwt(candidate: HttpBody<User>, req: HttpRequest) {
         const refreshToken = getDataFromCookies(req.headers.cookie, 'refreshToken');
 
-        const newTokens = await this.authService.refreshJwt(candidate, refreshToken);
+        return await this.authService.refreshJwt(candidate, refreshToken);
     }
 
     @http.GET('/ping')

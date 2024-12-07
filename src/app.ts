@@ -32,4 +32,8 @@ app.listen(httpWorkflow.onControllerError, (e) => {
     e.send(new Response('Internal server error', 'text/plain').status(500));
 });
 
+app.listen(httpWorkflow.onResponse, (e) => {
+    e.response.setHeader('Access-Control-Allow-Origin', '*');
+});
+
 app.run();

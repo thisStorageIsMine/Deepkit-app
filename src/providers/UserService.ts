@@ -23,7 +23,6 @@ export class UserService {
 
     async isLoginExists(login: string) {
         const user = await this.db.query(User).filter({ login }).findOneOrUndefined();
-
         return user !== undefined;
     }
 
@@ -49,7 +48,6 @@ export class UserService {
         this.db.query(User).filter({ id: user.id }).patchOne({ refresh_token: refreshJwt });
 
         return { ...user.getUser(), tokens: { accessJwt, refreshJwt } };
-        1;
     }
 
     async login(login: string, password: string) {
