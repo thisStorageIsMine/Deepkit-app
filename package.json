@@ -6,6 +6,7 @@
         "migration:up": "npx ts-node src/app.ts migration:up",
         "migration:down": "npx ts-node src/app.ts migration:down",
         "migration:up:fake": "npx ts-node src/app.ts migration:up --fake",
+        "bootstrap": "./scripts/install.sh",
         "postinstall": "./node_modules/.bin/deepkit-type-install"
     },
     "dependencies": {

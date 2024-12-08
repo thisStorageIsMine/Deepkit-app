@@ -1,8 +1,19 @@
-import { HttpBody, HttpError, HttpQuery, HttpRequest, HttpResponse, http } from '@deepkit/http';
+import {
+    HttpBody,
+    HttpController,
+    HttpError,
+    HttpQuery,
+    HttpRequest,
+    HttpResponse,
+    JSONResponse,
+    Response,
+    http,
+} from '@deepkit/http';
 import { SQLiteDatabase } from '../modules';
 import { IUser, User } from '../models';
 import { AuthService, UserService } from '../providers';
-import { getDataFromCookies } from '../middlewares';
+// import { getDataFromCookies } from '../middlewares';
+import { setCors } from '../utils';
 
 export class AuthController {
     constructor(
@@ -11,9 +22,25 @@ export class AuthController {
         private authService: AuthService,
     ) {}
 
+    @http.OPTIONS('/auth/signup')
+    dummy() {
+        return 'ok';
+    }
+
+    @http.OPTIONS('/auth/login')
+    dummy2() {
+        return 'ok';
+    }
+
+    @http.OPTIONS('/auth/refresh')
+    dummy3() {
+        return new Response('ok', 'text/plain');
+    }
+
     @(http.POST('/auth/signup').name('signup'))
-    async signUp(body: HttpBody<IUser>) {
+    async signUp(body: HttpBody<IUser>, res: HttpResponse) {
         const newUser = await this.userService.signUp(body);
+
         return newUser;
     }
 
@@ -29,9 +56,9 @@ export class AuthController {
 
     @(http.POST('/auth/refresh').name('jwt/refresh'))
     async refreshJwt(candidate: HttpBody<User>, req: HttpRequest) {
-        const refreshToken = getDataFromCookies(req.headers.cookie, 'refreshToken');
+        // const refreshToken = getDataFromCookies(req.headers.cookie, 'refreshToken');
 
-        return await this.authService.refreshJwt(candidate, refreshToken);
+        return await this.authService.refreshJwt(candidate, 'refreshToken');
     }
 
     @http.GET('/ping')

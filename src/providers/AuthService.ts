@@ -1,7 +1,7 @@
 import { User } from '../models';
 import * as bcrypt from 'bcrypt';
 import { SignJWT, jwtVerify } from 'jose';
-import { accessSecretJwt, refreshSecretJwt } from '../config';
+import { accessExp, accessSecretJwt, refreshExp, refreshSecretJwt } from '../config';
 import { SQLiteDatabase } from '../modules';
 import { HttpUnauthorizedError } from '@deepkit/http';
 
@@ -11,7 +11,7 @@ export class AuthService {
     private async generateJWT(
         payload: Record<string, unknown>,
         secret: Uint8Array,
-        expireIn: string,
+        expireIn: string | number,
     ) {
         const alg = 'HS256';
 
@@ -32,8 +32,8 @@ export class AuthService {
     }
 
     public async generateTokens(payload: Record<string, unknown>) {
-        const accessJwt = await this.generateJWT(payload, accessSecretJwt, '15m');
-        const refreshJwt = await this.generateJWT(payload, refreshSecretJwt, '7d');
+        const accessJwt = await this.generateJWT(payload, accessSecretJwt, accessExp);
+        const refreshJwt = await this.generateJWT(payload, refreshSecretJwt, refreshExp);
 
         return {
             accessJwt,
