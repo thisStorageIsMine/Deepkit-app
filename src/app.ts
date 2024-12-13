@@ -8,6 +8,8 @@ import { AuthController } from './controllers';
 import { NoteService } from './providers/NoteService';
 // import { AuthMiddleware } from './middlewares';
 import { CorsMiddleware } from './middlewares/CorsMiddleware';
+import { AuthMiddleware } from './middlewares';
+import { GuardService } from './providers/GuardService';
 
 const app = new App({
     imports: [
@@ -17,19 +19,14 @@ const app = new App({
         }),
         new ServerModule(),
     ],
-    middlewares: [
-        // httpMiddleware.for(AuthMiddleware).forRoutes({
-        //     group: 'notes',
-        // }),
-        httpMiddleware.for(CorsMiddleware),
-    ],
+    middlewares: [httpMiddleware.for(CorsMiddleware)],
     providers: [
         SQLiteDatabase,
         UserService,
         AuthService,
         NoteService,
-        // AuthMiddleware,
         CorsMiddleware,
+        GuardService,
     ],
 });
 
@@ -40,20 +37,6 @@ app.listen(httpWorkflow.onControllerError, (e) => {
 
     e.send(new Response('Internal server error', 'text/plain').status(500));
 });
-
-// app.listen(httpWorkflow.onRouteNotFound, (e) => {
-//     const method = e.request.method;
-
-//     if (method === 'OPTIONS') {
-//         e.send(
-//             new Response('Ok', 'text/plain')
-//                 .status(200)
-//                 .header('Access-Control-Allow-Origin', 'http://localhost:5173')
-//                 .header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS, PUT')
-//                 .header('Access-Control-Allow-Headers', 'Content-Type'),
-//         );
-//     }
-// });
 
 app.listen(httpWorkflow.onResponse, (e) => {
     const headers = new Headers({

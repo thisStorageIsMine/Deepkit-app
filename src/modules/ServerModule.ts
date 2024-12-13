@@ -3,5 +3,5 @@ import { AuthController } from '../controllers';
 import { NoteController } from '../controllers/NoteController';
 
 export class ServerModule extends createModule({
-    controllers: [AuthController, NoteController],
+    controllers: [AuthController],
 }) {}

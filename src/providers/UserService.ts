@@ -11,9 +11,15 @@ import {
     JSONResponse,
 } from '@deepkit/http';
 import { AuthService } from './AuthService';
-import { welcomeNote } from '../config';
+import { refreshSecretJwt, welcomeNote } from '../config';
 import { SQLiteDatabase } from '../modules';
 import { Logger } from '@deepkit/logger';
+import { supabase } from '../supabase/instanceSupabase';
+import { jwtDecrypt, jwtVerify } from 'jose';
+
+function decodeToken(token: string) {
+    return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+}
 
 export class UserService {
     constructor(
@@ -38,16 +44,30 @@ export class UserService {
 
         user.password = await this.authService.hashPassword(user.password);
 
+        const { error, data: newUser } = await supabase
+            .from('users')
+            .insert({ login: user.login, password: user.password })
+            .select();
+        if (error) {
+            throw new HttpInternalServerError('Failed to create user. :(');
+        }
+
         await this.db.persist(user);
 
         // Да я просто вставил сюда запрос на создание в другой таблице вместо триггера. Потому что не нашёл как запускать SQL при миграциях
         await this.db.persist(new Note(user, welcomeNote.name, welcomeNote.payload));
 
-        const { accessJwt, refreshJwt } = await this.authService.generateTokens(user.getUser());
+        const { accessJwt, refreshJwt } = await this.authService.generateTokens({
+            ...user.getUser(),
+            id: newUser[0].id,
+        });
 
-        this.db.query(User).filter({ id: user.id }).patchOne({ refresh_token: refreshJwt });
+        await this.db
+            .query(User)
+            .filter({ id: user.id })
+            .patchOne({ refresh_token: refreshJwt, key: newUser[0].id });
 
-        return { ...user.getUser(), tokens: { accessJwt, refreshJwt } };
+        return { ...user.getUser(), tokens: { accessJwt, refreshJwt }, id: newUser[0].id };
     }
 
     async login(login: string, password: string) {
@@ -72,14 +92,37 @@ export class UserService {
             throw new HttpUnauthorizedError('wrong password');
         }
 
-        const { accessJwt, refreshJwt } = await this.authService.generateTokens({
-            id: user.id,
-            login,
-            password,
-        });
+        const { accessJwt, refreshJwt } = await this.authService.generateTokens(user.getUser());
 
         this.db.query(User).filter({ id: user.id }).patchOne({ refresh_token: refreshJwt });
         return { ...user.getUser(), tokens: { accessJwt, refreshJwt } };
+    }
+
+    async loginViaToken(token: string) {
+        const x = await jwtVerify(token, refreshSecretJwt);
+
+        const exp = x.payload.exp;
+
+        if (!exp) throw new HttpUnauthorizedError();
+
+        const payload = decodeToken(token);
+
+        const user = await this.db.query(User).filter({ key: payload.id }).findOneOrUndefined();
+
+        if (!user) throw new HttpUnauthorizedError();
+
+        const storedToken = user.refresh_token;
+
+        if (!storedToken) throw new HttpUnauthorizedError();
+
+        const { accessJwt, refreshJwt } = await this.authService.generateTokens(user.getUser());
+
+        return {
+            tokens: {
+                accessJwt,
+                refreshJwt,
+            },
+        };
     }
 }
 

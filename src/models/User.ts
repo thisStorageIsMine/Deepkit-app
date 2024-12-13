@@ -3,12 +3,13 @@ import { AutoIncrement, PrimaryKey, Unique, entity } from '@deepkit/type';
 import { Note } from './Note';
 import { wrap } from '../utils';
 
-type TLogin = string & Unique;
+type TLogin = string;
 
 @entity.name('users')
 export class User {
     id: number & PrimaryKey & AutoIncrement = 0;
     role: 'user' | 'admin' = 'user';
+    key: number = 0;
     created_at: Date = new Date();
 
     constructor(
@@ -21,7 +22,7 @@ export class User {
         return {
             login: this.login,
             role: this.role,
-            id: this.id,
+            id: this.key,
         };
     }
 }

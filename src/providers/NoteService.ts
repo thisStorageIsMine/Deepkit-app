@@ -7,13 +7,11 @@ import { HttpError } from '@deepkit/http';
 export class NoteService {
     constructor(private db: SQLiteDatabase) {}
 
-    public async insertNote(data: Note) {
+    public async insertNote(data: { name: string; payload: string; user_id: User }) {
         const note = cast<Note>(data);
 
         const session = this.db.createSession();
-        session.add(note);
-
-        await session.commit();
+        await this.db.persist(note);
 
         return note;
     }

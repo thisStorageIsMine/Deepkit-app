@@ -8,6 +8,7 @@ export class CorsMiddleware implements HttpMiddleware {
         res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, HEAD, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
         res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('charset', 'utf-8');
         if (method === 'OPTIONS') {
             res.statusCode = 204;
             res.end();

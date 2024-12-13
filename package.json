@@ -7,7 +7,8 @@
         "migration:down": "npx ts-node src/app.ts migration:down",
         "migration:up:fake": "npx ts-node src/app.ts migration:up --fake",
         "bootstrap": "./scripts/install.sh",
-        "postinstall": "./node_modules/.bin/deepkit-type-install"
+        "postinstall": "./node_modules/.bin/deepkit-type-install",
+        "generate:types:supabase": "npx supabase gen types --lang=typescript --project-id 'mllifwgowjoivrxplnbq' --schema public > src/supabase/types.ts"
     },
     "dependencies": {
         "@deepkit/app": "^1.0.1-alpha.155",
@@ -30,10 +31,12 @@
         "@deepkit/type": "^1.0.1-alpha.155",
         "@deepkit/type-compiler": "^1.0.1-alpha.155",
         "@deepkit/workflow": "^1.0.1-alpha.155",
+        "@supabase/supabase-js": "^2.47.3",
         "bcrypt": "^5.1.1",
         "jose": "^5.9.6",
         "jsonwebtoken": "^9.0.2",
-        "rxjs": "^7.8.1"
+        "rxjs": "^7.8.1",
+        "supabase": "^2.0.0"
     },
     "devDependencies": {
         "@types/bcrypt": "^5.0.2",
